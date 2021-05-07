@@ -25,13 +25,14 @@ bullEngulf = htfOpen[1] > htfClose[1] and htfOpen < htfClose and htfClose >= htf
 bearEngulf = htfOpen[1] < htfClose[1] and htfOpen > htfClose and htfClose <= htfOpen[1] and htfOpen >= htfClose[1] and engulfShadow
 // Plot the 'triangle'
 plotshape(bullEngulf, title="Bullish Engulf", location=location.belowbar, transp=0, style=shape.triangleup, text="Bullish Engulfing", size=size.auto, color=color.blue)
-// plotshape(bearEngulf, title="Bearish Engulf", location=location.abovebar, transp=0, style=shape.triangledown, text="Bearish Engulfing", size=size.auto, color=color.red)
+plotshape(bearEngulf, title="Bearish Engulf", location=location.abovebar, transp=0, style=shape.triangledown, text="Bearish Engulfing", size=size.auto, color=color.red)
 
 
 var longZoneHigh = float(na)
 var longZoneLow = float(na)
 var shortZoneHigh = float(na)
 var shortZoneLow = float(na)
+
 
 var readyToRetestForLong = bool(na)
 var inRetestForLong = bool(na)
@@ -57,15 +58,15 @@ if bearEngulf
     readyToRetestForLong := bool(na)
     inRetestForLong := bool(na)
     
-//CROSSED OVER ZONE INITIALLY AND CAN NOW ATTEMPT TO RETEST ZONE
-if crossover(close,longZoneHigh)
-    readyToRetestForLong := true
 
 //CROSSED INTO ZONE AND CAN LOOK FOR HIGHER HIGH TO ENTER LONG
-if readyToRetestForLong and crossunder(low,longZoneHigh)
+if crossunder(low,longZoneHigh) and barssince(change(longZoneHigh) > 1)
     inRetestForLong := true
     longStopLoss := low
-    readyToRetestForLong := bool(na)
+    
+//TRACK LONG STOP LOSS
+if inRetestForLong 
+    longStopLoss := min(low,longStopLoss)
 
 //CROSSED UNDER ZONE FOR LONG - TRADE OFF
 if crossunder(low,longZoneLow)
@@ -74,22 +75,15 @@ if crossunder(low,longZoneLow)
     readyToRetestForLong := bool(na)
     inRetestForLong := bool(na)
     
-//USED ZONE ONCE ALREADY
-if crossover(close,longZoneHigh) and inRetestForLong
+//ENTRY SIGNAL FOR LONG
+if inRetestForLong and high > high[1]
+
+    strategy.entry("long",true)
+    longProfitTarget := close + ((close - longStopLoss) * rr)
     longZoneLow := float(na)
     longZoneHigh := float(na)
     inRetestForLong := bool(na)
-    
-//TRACK LONG STOP LOSS
-if inRetestForLong 
-    longStopLoss := min(low,longStopLoss)
-    
-//ENTRY SIGNAL FOR LONG
-if inRetestForLong and high > high[1]
-    if inTradingSession
-        strategy.entry("long",true)
-        longProfitTarget := close + ((close - longStopLoss) * rr)
-    
+        
 if hour == 15 and minute >= 56
     strategy.close_all()
     
@@ -103,7 +97,7 @@ strategy.exit("exit long", "long", limit = longProfitTarget, stop=longStopLoss)
 
 // plot(longStopLoss)
 // plot(longProfitTarget)
-// plotshape(inRetestForLong)
+plotshape(inRetestForLong)
 
 
 
