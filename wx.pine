@@ -24,7 +24,7 @@ engulfShadow = htfHigh > htfHigh[1] and htfLow < htfLow[1]
 // Check the Bearish Engulfing
 // bearEngulf = htfOpen[1] < htfClose[1] and htfOpen > htfClose and htfClose <= htfOpen[1] and htfOpen >= htfClose[1] and engulfShadow
 // Plot the 'triangle'
-bullEngulf = htfClose > htfHigh[1] and (htfClose - htfOpen) > (abs(htfClose[1] - htfOpen[1]) * 1.5)
+bullEngulf = htfClose > htfHigh[1] and (htfClose - htfOpen) > (abs(htfClose[1] - htfOpen[1]) * 1.5) and (htfClose[1] > htfOpen[1])
 bearEngulf = false
 plotshape(bullEngulf, title="Bullish Engulf", location=location.belowbar, transp=0, style=shape.triangleup, text="Bullish Engulfing", size=size.auto, color=color.blue)
 plotshape(bearEngulf, title="Bearish Engulf", location=location.abovebar, transp=0, style=shape.triangledown, text="Bearish Engulfing", size=size.auto, color=color.red)
