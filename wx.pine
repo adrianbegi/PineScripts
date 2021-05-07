@@ -20,10 +20,12 @@ htfClose=security(syminfo.tickerid, htfRes, close[1], barmerge.gaps_off, barmerg
 // Make sure the shadow is bigger than previous candle
 engulfShadow = htfHigh > htfHigh[1] and htfLow < htfLow[1]
 // Check the Bullish Engulfing
-bullEngulf = htfOpen[1] > htfClose[1] and htfOpen < htfClose and htfClose >= htfOpen[1] and htfOpen <= htfClose[1] and engulfShadow
+// bullEngulf = htfOpen[1] > htfClose[1] and htfOpen < htfClose and htfClose >= htfOpen[1] and htfOpen <= htfClose[1] and engulfShadow
 // Check the Bearish Engulfing
-bearEngulf = htfOpen[1] < htfClose[1] and htfOpen > htfClose and htfClose <= htfOpen[1] and htfOpen >= htfClose[1] and engulfShadow
+// bearEngulf = htfOpen[1] < htfClose[1] and htfOpen > htfClose and htfClose <= htfOpen[1] and htfOpen >= htfClose[1] and engulfShadow
 // Plot the 'triangle'
+bullEngulf = htfClose > htfHigh[1] and (htfClose - htfOpen) > (abs(htfClose[1] - htfOpen[1]) * 1.5)
+bearEngulf = false
 plotshape(bullEngulf, title="Bullish Engulf", location=location.belowbar, transp=0, style=shape.triangleup, text="Bullish Engulfing", size=size.auto, color=color.blue)
 plotshape(bearEngulf, title="Bearish Engulf", location=location.abovebar, transp=0, style=shape.triangledown, text="Bearish Engulfing", size=size.auto, color=color.red)
 
@@ -60,7 +62,7 @@ if bearEngulf
     
 
 //CROSSED INTO ZONE AND CAN LOOK FOR HIGHER HIGH TO ENTER LONG
-if crossunder(low,longZoneHigh) and barssince(change(longZoneHigh) > 1)
+if crossunder(low,longZoneHigh) and barssince(change(longZoneHigh) > 2)
     inRetestForLong := true
     longStopLoss := low
     
@@ -77,12 +79,12 @@ if crossunder(low,longZoneLow)
     
 //ENTRY SIGNAL FOR LONG
 if inRetestForLong and high > high[1]
-
-    strategy.entry("long",true)
-    longProfitTarget := close + ((close - longStopLoss) * rr)
-    longZoneLow := float(na)
-    longZoneHigh := float(na)
-    inRetestForLong := bool(na)
+    if inTradingSession
+        strategy.entry("long",true)
+        longProfitTarget := close + ((close - longStopLoss) * rr)
+        longZoneLow := float(na)
+        longZoneHigh := float(na)
+        inRetestForLong := bool(na)
         
 if hour == 15 and minute >= 56
     strategy.close_all()
