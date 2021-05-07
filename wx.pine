@@ -4,6 +4,9 @@
 //@version=4
 strategy("WX_Trader - Supply/Demand Zones", overlay=true)
 
+tradetime = input("0930-1600",type=input.session, title='Trading Session')
+inTradingSession = time(timeframe.period, tradetime)
+
 htfRes = input(title="Zone Resolution", type=input.resolution, defval="10")
 rr = input(title="R/R", type=input.float, defval=1.0, minval=.01, maxval=100, step=0.1)
 
@@ -83,8 +86,9 @@ if inRetestForLong
     
 //ENTRY SIGNAL FOR LONG
 if inRetestForLong and high > high[1]
-    strategy.entry("long",true)
-    longProfitTarget := close + ((close - longStopLoss) * rr)
+    if inTradingSession
+        strategy.entry("long",true)
+        longProfitTarget := close + ((close - longStopLoss) * rr)
     
 if hour == 15 and minute >= 56
     strategy.close_all()
