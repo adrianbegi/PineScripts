@@ -1,0 +1,97 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PropTradingShop
+
+//@version=4
+strategy("WX_Trader - Supply/Demand Zones", overlay=true)
+
+htfRes = input(title="Zone Resolution", type=input.resolution, defval="10")
+rr = input(title="R/R", type=input.float, defval=1.0, minval=.01, maxval=100, step=0.1)
+
+
+htfOpen=security(syminfo.tickerid, htfRes, open[1], barmerge.gaps_off, barmerge.lookahead_on)
+htfHigh=security(syminfo.tickerid, htfRes, high[1], barmerge.gaps_off, barmerge.lookahead_on)
+htfLow=security(syminfo.tickerid, htfRes, low[1], barmerge.gaps_off, barmerge.lookahead_on)
+htfClose=security(syminfo.tickerid, htfRes, close[1], barmerge.gaps_off, barmerge.lookahead_on)
+
+
+// Make sure the shadow is bigger than previous candle
+engulfShadow = htfHigh > htfHigh[1] and htfLow < htfLow[1]
+// Check the Bullish Engulfing
+bullEngulf = htfOpen[1] > htfClose[1] and htfOpen < htfClose and htfClose >= htfOpen[1] and htfOpen <= htfClose[1] and engulfShadow
+// Check the Bearish Engulfing
+bearEngulf = htfOpen[1] < htfClose[1] and htfOpen > htfClose and htfClose <= htfOpen[1] and htfOpen >= htfClose[1] and engulfShadow
+// Plot the 'triangle'
+plotshape(bullEngulf, title="Bullish Engulf", location=location.belowbar, transp=0, style=shape.triangleup, text="Bullish Engulfing", size=size.auto, color=color.blue)
+// plotshape(bearEngulf, title="Bearish Engulf", location=location.abovebar, transp=0, style=shape.triangledown, text="Bearish Engulfing", size=size.auto, color=color.red)
+
+
+var longZoneHigh = float(na)
+var longZoneLow = float(na)
+var shortZoneHigh = float(na)
+var shortZoneLow = float(na)
+
+var inRetestForLong = bool(na)
+
+var inRetestForShort = bool(na)
+
+var longProfitTarget = float(na)
+var longStopLoss = float(na)
+
+if bullEngulf
+    longZoneHigh := htfOpen[1]
+    longZoneLow := htfLow[1]
+    shortZoneLow := float(na)
+    shortZoneHigh := float(na)
+
+if bearEngulf
+    shortZoneHigh := htfHigh[1]
+    shortZoneLow := htfOpen[1]
+    longZoneLow := float(na)
+    longZoneHigh := float(na)
+
+    inRetestForLong := bool(na)
+
+
+//CROSSED INTO ZONE AND CAN LOOK FOR HIGHER HIGH TO ENTER LONG
+if crossunder(low,longZoneHigh)
+    inRetestForLong := true
+    longStopLoss := low
+    
+//CROSSED UNDER ZONE FOR LONG - TRADE OFF
+if inRetestForLong and crossunder(low,longZoneLow)
+    longZoneLow := float(na)
+    longZoneHigh := float(na)
+    inRetestForLong := bool(na)
+    
+//USED ZONE ONCE ALREADY
+if crossover(close,longZoneHigh) and inRetestForLong
+    longZoneLow := float(na)
+    longZoneHigh := float(na)
+    inRetestForLong := bool(na)
+    
+//TRACK LONG STOP LOSS
+if inRetestForLong 
+    longStopLoss := min(low,longStopLoss)
+    
+//ENTRY SIGNAL FOR LONG
+if inRetestForLong and high > high[1]
+    strategy.entry("long",true)
+    longProfitTarget := strategy.position_avg_price + ((strategy.position_avg_price - longStopLoss) * rr)
+    
+if hour == 15 and minute >= 56
+    strategy.close_all()
+    
+
+p1 = plot(longZoneHigh,title="Long Zone High",style=plot.style_circles)
+p2 = plot(longZoneLow, title="Long Zone Low",style=plot.style_circles)
+fill(p1, p2, color=color.green)
+
+strategy.exit("exit long", "long", limit = longProfitTarget, stop=longStopLoss)
+
+// plot(strategy.position_size > 0 ? longStopLoss : na,title="long stop loss", color=color.red, style=plot.style_circles,trackprice= false)
+// plot(strategy.position_size > 0 ? longProfitTarget : na, title="long profit target", color=color.green, style=plot.style_circles, trackprice=false)
+
+
+// plotshape(inRetestForLong)
+
+
