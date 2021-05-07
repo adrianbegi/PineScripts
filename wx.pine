@@ -30,8 +30,10 @@ var longZoneLow = float(na)
 var shortZoneHigh = float(na)
 var shortZoneLow = float(na)
 
+var readyToRetestForLong = bool(na)
 var inRetestForLong = bool(na)
 
+var readyToRetestForShort = bool(na)
 var inRetestForShort = bool(na)
 
 var longProfitTarget = float(na)
@@ -49,18 +51,24 @@ if bearEngulf
     longZoneLow := float(na)
     longZoneHigh := float(na)
 
+    readyToRetestForLong := bool(na)
     inRetestForLong := bool(na)
-
+    
+//CROSSED OVER ZONE INITIALLY AND CAN NOW ATTEMPT TO RETEST ZONE
+if crossover(close,longZoneHigh)
+    readyToRetestForLong := true
 
 //CROSSED INTO ZONE AND CAN LOOK FOR HIGHER HIGH TO ENTER LONG
-if crossunder(low,longZoneHigh)
+if readyToRetestForLong and crossunder(low,longZoneHigh)
     inRetestForLong := true
     longStopLoss := low
-    
+    readyToRetestForLong := bool(na)
+
 //CROSSED UNDER ZONE FOR LONG - TRADE OFF
-if inRetestForLong and crossunder(low,longZoneLow)
+if crossunder(low,longZoneLow)
     longZoneLow := float(na)
     longZoneHigh := float(na)
+    readyToRetestForLong := bool(na)
     inRetestForLong := bool(na)
     
 //USED ZONE ONCE ALREADY
@@ -76,7 +84,7 @@ if inRetestForLong
 //ENTRY SIGNAL FOR LONG
 if inRetestForLong and high > high[1]
     strategy.entry("long",true)
-    longProfitTarget := strategy.position_avg_price + ((strategy.position_avg_price - longStopLoss) * rr)
+    longProfitTarget := close + ((close - longStopLoss) * rr)
     
 if hour == 15 and minute >= 56
     strategy.close_all()
@@ -88,10 +96,10 @@ fill(p1, p2, color=color.green)
 
 strategy.exit("exit long", "long", limit = longProfitTarget, stop=longStopLoss)
 
-// plot(strategy.position_size > 0 ? longStopLoss : na,title="long stop loss", color=color.red, style=plot.style_circles,trackprice= false)
-// plot(strategy.position_size > 0 ? longProfitTarget : na, title="long profit target", color=color.green, style=plot.style_circles, trackprice=false)
 
-
+// plot(longStopLoss)
+// plot(longProfitTarget)
 // plotshape(inRetestForLong)
+
 
 
